@@ -1,0 +1,53 @@
+# k8s/base/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+      - name: gateway
+        image: melek4000/gateway:v1
+        ports:
+        - containerPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shipment
+  template:
+    metadata:
+      labels:
+        app: shipment
+    spec:
+      containers:
+      - name: shipment
+        image: melek4000/shipment:v1
+        ports:
+        - containerPort: 3001
+spec:
+  template:
+    spec:
+      containers:
+      - name: shipment
+        image: melek4000/shipment:v1
+        resources:
+          requests:
+            cpu: "100m"    # <--- THE MISSING PIECE
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
