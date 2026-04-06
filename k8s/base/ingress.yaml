@@ -2,8 +2,16 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: logistics-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
+
+  tls:
+  - hosts:
+    - logistics.local
+    secretName: logistics-tls
+
   rules:
   - host: logistics.local
     http:

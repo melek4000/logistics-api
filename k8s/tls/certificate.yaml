@@ -1,0 +1,11 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: logistics-cert
+spec:
+  secretName: logistics-tls
+  issuerRef:
+    name: selfsigned-issuer
+  commonName: logistics.local
+  dnsNames:
+    - logistics.local
