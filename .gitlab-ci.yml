@@ -1,0 +1,52 @@
+stages:
+  - build
+  - scan
+  - deploy
+
+variables:
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+# -------------------------
+# 🐳 BUILD STAGE
+# -------------------------
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - echo "Using Minikube Docker"
+    - eval $(minikube docker-env)
+
+    - docker build -t gateway:$IMAGE_TAG ./api-gateway
+    - docker build -t shipment:$IMAGE_TAG ./shipment-service
+
+# -------------------------
+# 🔐 SECURITY SCAN (TRIVY)
+# -------------------------
+scan:
+  stage: scan
+  image: aquasec/trivy
+  script:
+    - trivy image gateway:$IMAGE_TAG
+    - trivy image shipment:$IMAGE_TAG
+
+# -------------------------
+# 🚀 DEPLOY STAGE
+# -------------------------
+deploy:
+  stage: deploy
+  image: bitnami/kubectl
+  script:
+    - echo "$KUBECONFIG" | base64 -d > kubeconfig
+    - export KUBECONFIG=$PWD/kubeconfig
+
+    # Update image in deployment
+    - sed -i "s/gateway:.*/gateway:$IMAGE_TAG/" k8s/base/deployment.yaml
+    - sed -i "s/shipment:.*/shipment:$IMAGE_TAG/" k8s/base/deployment.yaml
+
+    # Apply changes
+    - kubectl apply -f k8s/base/
+
+    # Verify rollout
+    - kubectl rollout status deployment/gateway
